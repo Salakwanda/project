@@ -102,49 +102,107 @@ document.addEventListener("DOMContentLoaded", function () {
   const profilePop = document.getElementById("profilePop");
   if (notifBtn && notifPop) {
     notifBtn.addEventListener("click", (e) => {
-      const open = notifPop.hasAttribute("hidden");
-      if (open) {
-        notifPop.removeAttribute("hidden");
-        notifBtn.setAttribute("aria-expanded", "true");
+      if (notifPop.classList.contains("open")) {
+        hidePopover(notifPop, notifBtn);
       } else {
-        notifPop.setAttribute("hidden", "");
-        notifBtn.setAttribute("aria-expanded", "false");
+        showPopover(notifPop, notifBtn);
       }
     });
   }
   if (profileBtn && profilePop) {
     profileBtn.addEventListener("click", (e) => {
-      const open = profilePop.hasAttribute("hidden");
-      if (open) {
-        profilePop.removeAttribute("hidden");
-        profileBtn.setAttribute("aria-expanded", "true");
+      if (profilePop.classList.contains("open")) {
+        hidePopover(profilePop, profileBtn);
       } else {
-        profilePop.setAttribute("hidden", "");
-        profileBtn.setAttribute("aria-expanded", "false");
+        showPopover(profilePop, profileBtn, true);
       }
     });
   }
 
   // Close popovers when clicking outside or pressing Escape
-  document.addEventListener('click', (e) => {
-    if (notifPop && !notifPop.contains(e.target) && notifBtn && !notifBtn.contains(e.target)) {
-      if (!notifPop.hasAttribute('hidden')) {
-        notifPop.setAttribute('hidden', '');
-        notifBtn.setAttribute('aria-expanded', 'false');
-      }
+  document.addEventListener("click", (e) => {
+    if (
+      notifPop &&
+      !notifPop.contains(e.target) &&
+      notifBtn &&
+      !notifBtn.contains(e.target)
+    ) {
+      if (notifPop.classList.contains("open")) hidePopover(notifPop, notifBtn);
     }
-    if (profilePop && !profilePop.contains(e.target) && profileBtn && !profileBtn.contains(e.target)) {
-      if (!profilePop.hasAttribute('hidden')) {
-        profilePop.setAttribute('hidden', '');
-        profileBtn.setAttribute('aria-expanded', 'false');
+    if (
+      profilePop &&
+      !profilePop.contains(e.target) &&
+      profileBtn &&
+      !profileBtn.contains(e.target)
+    ) {
+      if (profilePop.classList.contains("open"))
+        hidePopover(profilePop, profileBtn);
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (notifPop && notifPop.classList.contains("open"))
+        hidePopover(notifPop, notifBtn);
+      if (profilePop && profilePop.classList.contains("open"))
+        hidePopover(profilePop, profileBtn);
+      if (nav && nav.classList.contains("open")) {
+        nav.classList.remove("open");
+        navToggle.setAttribute("aria-expanded", "false");
       }
     }
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (notifPop && !notifPop.hasAttribute('hidden')) { notifPop.setAttribute('hidden',''); notifBtn.setAttribute('aria-expanded','false'); }
-      if (profilePop && !profilePop.hasAttribute('hidden')) { profilePop.setAttribute('hidden',''); profileBtn.setAttribute('aria-expanded','false'); }
-      if (nav && nav.classList.contains('open')) { nav.classList.remove('open'); navToggle.setAttribute('aria-expanded','false'); }
+
+  // Utility functions for animated popovers
+  function showPopover(pop, btn, focusFirst = false) {
+    pop.removeAttribute("hidden");
+    // allow CSS transition
+    requestAnimationFrame(() => pop.classList.add("open"));
+    btn.setAttribute("aria-expanded", "true");
+    // focus first focusable element inside if requested
+    if (focusFirst) {
+      const focusable = pop.querySelector("a,button,input,select,textarea");
+      if (focusable) {
+        focusable.focus();
+      } else {
+        // fallback to focusing the pop container itself
+        setTimeout(() => pop.focus(), 50);
+      }
+    } else {
+      // small courtesy focus so keyboard users can close with Escape
+      setTimeout(() => pop.focus(), 120);
     }
+  }
+
+  function hidePopover(pop, btn) {
+    pop.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+    // wait for transition to finish before hiding to allow animation
+    const ms = 220;
+    setTimeout(() => {
+      pop.setAttribute("hidden", "");
+    }, ms);
+  }
+
+  // Close button inside profile popover
+  document.querySelectorAll(".pop-close").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const pop = btn.closest(".profile-pop, .notif-pop");
+      if (!pop) return;
+      if (pop.classList.contains("open")) {
+        if (pop.id === "profilePop") hidePopover(pop, profileBtn);
+        else if (pop.id === "notifPop") hidePopover(pop, notifBtn);
+      }
+    });
+  });
+
+  // Hide profile popover when clicking a menu item (useful for non-navigation links)
+  document.querySelectorAll(".profile-pop .menu-item").forEach((mi) => {
+    mi.addEventListener("click", (e) => {
+      const href = mi.getAttribute("href") || "";
+      if (href === "#" || href === "") {
+        e.preventDefault();
+        hidePopover(document.getElementById("profilePop"), profileBtn);
+      }
+    });
   });
 });

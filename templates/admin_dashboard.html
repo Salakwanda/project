@@ -28,7 +28,26 @@
         <td>{{ a.status }}</td>
         <td>
           {% if a.transport.requested %}
-          <div>Pickup: {{ a.transport.pickup_address }}</div>
+          <div>
+            {% if a.transport.pickup_lat and a.transport.pickup_lng %}
+            <a
+              target="_blank"
+              rel="noopener"
+              href="https://www.google.com/maps/search/?api=1&query={{ a.transport.pickup_lat }},{{ a.transport.pickup_lng }}"
+              >Pickup: Current location ({{ a.transport.pickup_lat }}, {{
+              a.transport.pickup_lng }})</a
+            >
+            {% elif a.transport.pickup_address %}
+            <a
+              target="_blank"
+              rel="noopener"
+              href="https://www.google.com/maps/search/?api=1&query={{ a.transport.pickup_address|urlencode }}"
+              >Pickup: {{ a.transport.pickup_address }}</a
+            >
+            {% else %}
+            <div>Pickup: Not provided</div>
+            {% endif %}
+          </div>
           <div>Status: {{ a.transport.status }}</div>
           <div>
             Provider: {{ a.transport.provider.name if a.transport.provider }}

@@ -107,6 +107,12 @@ def book():
         time = request.form.get('time')
         needs_transport = request.form.get('needs_transport') == 'yes'
         pickup_address = request.form.get('pickup_address') if needs_transport else None
+        pickup_lat = request.form.get('pickup_lat') if needs_transport else None
+        pickup_lng = request.form.get('pickup_lng') if needs_transport else None
+        # Server-side validation: require pickup info when transport requested
+        if needs_transport and not (pickup_address or (pickup_lat and pickup_lng)):
+            flash('Please provide a pickup address or use your current location')
+            return redirect(url_for('book'))
         appt = {
             'id': len(APPOINTMENTS) + 1,
             'patient_email': session['user']['email'],
@@ -121,7 +127,9 @@ def book():
             'messages': [],  # {sender, text, ts}
             'transport': {
                 'requested': needs_transport,
-                'pickup_address': pickup_address,
+                    'pickup_address': pickup_address,
+                    'pickup_lat': float(pickup_lat) if pickup_lat else None,
+                    'pickup_lng': float(pickup_lng) if pickup_lng else None,
                 'status': 'Requested' if needs_transport else 'N/A',
                 'provider': None
             }

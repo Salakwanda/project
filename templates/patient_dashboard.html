@@ -24,8 +24,29 @@
         <td>{{ a.datetime }}</td>
         <td>{{ a.status }}</td>
         <td>
-          {% if a.transport.requested %}
-          <div>Pickup: {{ a.transport.pickup_address }}</div>
+          {% if a.transport.requested %} {% if a.transport.pickup_lat and
+          a.transport.pickup_lng %}
+          <div>
+            <a
+              target="_blank"
+              rel="noopener"
+              href="https://www.google.com/maps/search/?api=1&query={{ a.transport.pickup_lat }},{{ a.transport.pickup_lng }}"
+              >Pickup: Current location ({{ a.transport.pickup_lat }}, {{
+              a.transport.pickup_lng }})</a
+            >
+          </div>
+          {% elif a.transport.pickup_address %}
+          <div>
+            <a
+              target="_blank"
+              rel="noopener"
+              href="https://www.google.com/maps/search/?api=1&query={{ a.transport.pickup_address|urlencode }}"
+              >Pickup: {{ a.transport.pickup_address }}</a
+            >
+          </div>
+          {% else %}
+          <div>Pickup: Not provided</div>
+          {% endif %}
           <div>Status: {{ a.transport.status }}</div>
           {% else %}
           <div>Self-transport</div>
