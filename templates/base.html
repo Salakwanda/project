@@ -3,41 +3,129 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#c62828" />
     <title>Belpw Health — Private Appointments</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/static/css/styles.css" />
   </head>
-  <body>
-    <header class="site-header">
-      <div class="container header-row">
-        <div class="brand-row">
-          <a href="/" class="brand">
-            <img
-              src="/static/img/logo.svg"
-              alt="Belpw Health logo"
+          <div class="profile-wrap">
+            <button id="profileBtn" class="avatar" aria-haspopup="true" aria-expanded="false">
+              {% if profile %}{{ profile.initials }}{% else %}?{% endif %}
+            </button>
+            <span class="profile-name">{% if profile %}{{ profile.name }}{% endif %}</span>
+            <div class="profile-pop" id="profilePop" hidden>
+              <div class="profile-meta">{% if profile %}{{ profile.name }} • {{ profile.role }}{% endif %}</div>
+              <a href="#">Profile</a>
+              <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+          </div>
               class="logo"
-            />
+              width="36"
+              height="36"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect width="24" height="24" rx="5" fill="#c62828" />
+              <path
+                d="M6 12c1.5-2 4-3 6-3s4.5 1 6 3v5H6v-5z"
+                fill="#fff"
+                opacity="0.95"
+              />
+            </svg>
           </a>
+          <span class="brand-badge" aria-hidden="true">Healthcare</span>
           <button
             id="navToggle"
             class="nav-toggle"
             aria-label="Toggle navigation"
+            aria-expanded="false"
           >
-            ☰
+            <span class="hamburger" aria-hidden="true">☰</span>
           </button>
         </div>
-        <nav class="nav-links">
-          {% if session.user %} {% if session.user.role == 'patient' %}
-          <a href="{{ url_for('patient_dashboard') }}">Dashboard</a>
-          <a href="{{ url_for('book') }}">Book Appointment</a>
-          {% elif session.user.role == 'admin' %}
-          <a href="{{ url_for('admin_dashboard') }}">Admin</a>
-          {% endif %}
-          <a href="{{ url_for('logout') }}" class="danger">Logout</a>
-          {% else %}
-          <a href="{{ url_for('login') }}">Login</a>
-          <a href="{{ url_for('register') }}">Register</a>
-          {% endif %}
+        <nav class="nav-links" aria-label="Primary navigation">
+          <ul>
+            {% if session.user %} {% if session.user.role == 'patient' %}
+            <li><a href="{{ url_for('patient_dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('book') }}">Book Appointment</a></li>
+            {% elif session.user.role == 'admin' %}
+            <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('logout') }}" class="danger">Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            <li><a href="{{ url_for('register') }}">Register</a></li>
+            {% endif %}
+          </ul>
         </nav>
+        <div class="nav-right">
+          {% if session.user %}
+          <button
+            id="notifBtn"
+            class="notif-bell"
+            aria-label="Notifications"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zM18 16v-5a6 6 0 0 0-5-5.91V4a1 1 0 0 0-2 0v1.09A6 6 0 0 0 6 11v5l-2 2v1h16v-1l-2-2z"
+              <div class="notif-pop" id="notifPop" hidden>
+                <div class="notif-list">
+                  {% if notifs and notifs|length > 0 %}
+                    {% for n in notifs[:6] %}
+                    <a class="notif-item" href="{% if session.user.role == 'admin' %}{{ url_for('admin_dashboard') }}{% else %}{{ url_for('patient_dashboard') }}{% endif %}">
+                      <div class="notif-sender">{{ n.sender }}</div>
+                      <div class="notif-text">{{ n.text }}</div>
+                      <div class="notif-ts">{{ n.ts }}</div>
+                    </a>
+                    {% endfor %}
+                    <div class="notif-actions">
+                      <form method="post" action="{{ url_for('notifications_mark_read') }}">
+                        <button class="btn small" type="submit">Mark all read</button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <div class="note">No new notifications</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+          </button>
+          <div class="notif-pop" id="notifPop" hidden>
+            <form
+              method="post"
+              action="{{ url_for('notifications_mark_read') }}"
+            >
+              <button class="btn small" type="submit">Mark all read</button>
+            </form>
+          </div>
+
+          <button
+            id="profileBtn"
+            class="avatar"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            {% if profile %}{{ profile.initials }}{% else %}?{% endif %}
+          </button>
+          <div class="profile-pop" id="profilePop" hidden>
+            <a href="#">Profile</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+          </div>
+          {% endif %}
+        </div>
       </div>
     </header>
 

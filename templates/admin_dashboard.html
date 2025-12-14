@@ -1,7 +1,7 @@
 {% extends 'base.html' %} {% block content %}
 <h2>Admin Dashboard</h2>
 {% if appointments %}
-<div class="card">
+<div class="card reveal">
   <table class="table">
     <thead>
       <tr>
@@ -18,7 +18,11 @@
       {% for a in appointments %}
       <tr>
         <td>{{ a.id }}</td>
-        <td>{{ a.patient_name }}</td>
+        <td>
+          {{ a.patient_name }} {% if a.unread and a.unread > 0 %}
+          <span class="notif-badge small">{{ a.unread }}</span>
+          {% endif %}
+        </td>
         <td>{{ a.doctor }}</td>
         <td>{{ a.datetime }}</td>
         <td>{{ a.status }}</td>
@@ -29,6 +33,32 @@
           <div>
             Provider: {{ a.transport.provider.name if a.transport.provider }}
           </div>
+          <div class="note">Estimated cost: ${{ a.price }}</div>
+          <div class="messages">
+            {% for m in a.messages %}
+            <div
+              class="msg {% if m.role == session.user.role %}outgoing{% else %}incoming{% endif %}"
+            >
+              <div><strong>{{ m.sender }}</strong></div>
+              <div class="msg-text">{{ m.text }}</div>
+              <div class="ts">{{ m.ts }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <form
+            method="post"
+            action="{{ url_for('appointment_message') }}"
+            style="margin-top: 0.5rem"
+          >
+            <input type="hidden" name="appointment_id" value="{{ a.id }}" />
+            <input
+              type="text"
+              name="message"
+              placeholder="Message patient about transport"
+              required
+            />
+            <button class="btn small" type="submit">Send</button>
+          </form>
           {% else %}
           <div>Not requested</div>
           {% endif %}

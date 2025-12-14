@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block content %}
 <h2>Book an Appointment</h2>
-<div class="card">
+<div class="card reveal">
   <form id="bookForm" method="post" class="form">
     <label
       >Choose doctor / clinic
@@ -29,6 +29,23 @@
         have my own transport</label
       >
     </fieldset>
+    <label>
+      Describe your situation
+      <textarea
+        name="notes"
+        rows="3"
+        placeholder="Tell us about your condition or needs (e.g., mobility, escorts, urgent medication)"
+      ></textarea>
+    </label>
+    <label>
+      <input
+        type="checkbox"
+        name="collect_medication"
+        id="collect_medication"
+      />
+      I need someone to collect/pick up medicines for me
+    </label>
+    <div class="note">Estimated cost: <span id="priceEstimate">$50</span></div>
     <div id="pickupGroup" style="display: none" class="card" aria-hidden="true">
       <label
         >Pickup address
@@ -54,11 +71,15 @@
       const selected = Array.from(radios).find((r) => r.checked).value;
       if (selected === "yes") {
         pickup.style.display = "block";
+        pickup.setAttribute("aria-hidden", "false");
+        document.getElementById("pickup_address").required = true;
         // Simulate estimated pickup time
         const minutes = 10 + Math.floor(Math.random() * 30);
         eta.textContent = "Estimated pickup time: ~" + minutes + " minutes.";
       } else {
         pickup.style.display = "none";
+        pickup.setAttribute("aria-hidden", "true");
+        document.getElementById("pickup_address").required = false;
         eta.textContent = "";
       }
     }

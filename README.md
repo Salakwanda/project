@@ -32,6 +32,24 @@ python app.py
 
 3. Open http://127.0.0.1:5000 in your browser
 
+Recommended (create a venv):
+
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+macOS / Linux (bash):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
 Demo admin credentials:
 
 - Email: `admin@clinic.local`

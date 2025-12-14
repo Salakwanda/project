@@ -114,6 +114,11 @@ def book():
             'doctor': doctor,
             'datetime': f"{date} {time}",
             'status': 'Requested',
+            'notes': request.form.get('notes', '').strip(),
+            'collect_medication': bool(request.form.get('collect_medication')),
+            # price is simple estimation (appointment base + transport + meds)
+            'price': 0,
+            'messages': [],  # {sender, text, ts}
             'transport': {
                 'requested': needs_transport,
                 'pickup_address': pickup_address,
@@ -121,6 +126,11 @@ def book():
                 'provider': None
             }
         }
+        # compute price estimate
+        base = 50
+        transport_fee = 20 if needs_transport else 0
+        meds_fee = 10 if appt['collect_medication'] else 0
+        appt['price'] = base + transport_fee + meds_fee
         APPOINTMENTS.append(appt)
         flash('Appointment requested')
         return redirect(url_for('patient_dashboard'))
@@ -136,12 +146,30 @@ def patient_dashboard():
         return redirect(url_for('index'))
     user_email = session['user']['email']
     user_appts = [a for a in APPOINTMENTS if a['patient_email'] == user_email]
+    # annotate unread counts for this user
+    name = session['user']['name']
+    role = session['user']['role']
+    for a in user_appts:
+        unread = 0
+        for m in a.get('messages', []):
+            if m.get('role') != role and name not in m.get('read_by', []):
+                unread += 1
+        a['unread'] = unread
     return render_template('patient_dashboard.html', appointments=user_appts)
 
 @app.route('/admin/dashboard')
 @login_required
 @role_required('admin')
 def admin_dashboard():
+    # annotate appointments with unread message counts for admin
+    name = session['user']['name']
+    role = session['user']['role']
+    for a in APPOINTMENTS:
+        unread = 0
+        for m in a.get('messages', []):
+            if m.get('role') != role and name not in m.get('read_by', []):
+                unread += 1
+        a['unread'] = unread
     return render_template('admin_dashboard.html', appointments=APPOINTMENTS, providers=TRANSPORT_PROVIDERS)
 
 @app.route('/admin/assign', methods=['POST'])
@@ -158,6 +186,26 @@ def admin_assign():
             flash('Assigned transport')
             break
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/appointment/message', methods=['POST'])
+@login_required
+def appointment_message():
+    appt_id = int(request.form.get('appointment_id'))
+    text = request.form.get('message', '').strip()
+    if not text:
+        flash('Message cannot be empty')
+        return redirect(url_for('index'))
+    for a in APPOINTMENTS:
+        if a['id'] == appt_id:
+            msg = {'sender': session['user']['name'], 'role': session['user']['role'], 'text': text, 'ts': datetime.datetime.utcnow().isoformat(), 'read_by': [session['user']['name']]}
+            a['messages'].append(msg)
+            flash('Message sent')
+            break
+    # Redirect back to appropriate dashboard depending on user
+    if session['user']['role'] == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('patient_dashboard'))
 
 @app.route('/admin/update_status', methods=['POST'])
 @login_required
@@ -182,7 +230,47 @@ def api_providers():
 # Disclaimer route fragment (could be included in footer)
 @app.context_processor
 def inject_disclaimer():
-    return dict(transport_disclaimer='Transport services are provided by third parties.')
+    # Add notification list/count and simple profile info for templates
+    notif_count = 0
+    notifs = []
+    profile = None
+    if 'user' in session:
+        name = session['user']['name']
+        role = session['user']['role']
+        profile = {'name': name, 'initials': ''.join([p[0] for p in name.split()])[:2].upper(), 'role': role}
+        for a in APPOINTMENTS:
+            for m in a.get('messages', []):
+                # notifications for current user are messages sent by the other role and not yet read by this user
+                if m.get('role') != role and name not in m.get('read_by', []):
+                    notif_count += 1
+                    notifs.append({
+                        'appointment_id': a['id'],
+                        'sender': m.get('sender'),
+                        'text': (m.get('text')[:80] + '...') if len(m.get('text',''))>80 else m.get('text',''),
+                        'ts': m.get('ts')
+                    })
+    return dict(transport_disclaimer='Transport services are provided by third parties.', notif_count=notif_count, notifs=notifs, profile=profile)
+
+
+@app.route('/notifications/mark_read', methods=['POST'])
+@login_required
+def notifications_mark_read():
+    name = session['user']['name']
+    role = session['user']['role']
+    updated = 0
+    for a in APPOINTMENTS:
+        for m in a.get('messages', []):
+            if m.get('role') != role:
+                if 'read_by' not in m:
+                    m['read_by'] = []
+                if name not in m['read_by']:
+                    m['read_by'].append(name)
+                    updated += 1
+    flash(f'Marked {updated} messages as read')
+    # Redirect back where appropriate
+    if role == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('patient_dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True)
