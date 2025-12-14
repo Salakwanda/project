@@ -1,0 +1,68 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Admin Dashboard</h2>
+{% if appointments %}
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Patient</th>
+        <th>Doctor</th>
+        <th>Date/Time</th>
+        <th>Appt Status</th>
+        <th>Transport</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in appointments %}
+      <tr>
+        <td>{{ a.id }}</td>
+        <td>{{ a.patient_name }}</td>
+        <td>{{ a.doctor }}</td>
+        <td>{{ a.datetime }}</td>
+        <td>{{ a.status }}</td>
+        <td>
+          {% if a.transport.requested %}
+          <div>Pickup: {{ a.transport.pickup_address }}</div>
+          <div>Status: {{ a.transport.status }}</div>
+          <div>
+            Provider: {{ a.transport.provider.name if a.transport.provider }}
+          </div>
+          {% else %}
+          <div>Not requested</div>
+          {% endif %}
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('admin_assign') }}">
+            <input type="hidden" name="appointment_id" value="{{ a.id }}" />
+            <select name="provider_id">
+              {% for p in providers %}
+              <option value="{{ p.id }}">{{ p.name }}</option>
+              {% endfor %}
+            </select>
+            <button class="btn small" type="submit">Assign Transport</button>
+          </form>
+          <form
+            method="post"
+            action="{{ url_for('admin_update_status') }}"
+            style="margin-top: 0.5rem"
+          >
+            <input type="hidden" name="appointment_id" value="{{ a.id }}" />
+            <select name="status">
+              <option>Requested</option>
+              <option>Confirmed</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+            <button class="btn small" type="submit">Update Status</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p>No appointments yet.</p>
+{% endif %} {% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+  <section class="hero">
+    <h1>Welcome to Belpw Health</h1>
+    <p>Book private healthcare appointments and request transport where needed.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('register') }}">Get Started</a>
+      <a class="btn secondary" href="{{ url_for('login') }}">Login</a>
+    </div>
+  </section>
+{% endblock %}

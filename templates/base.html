@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Belpw Health — Private Appointments</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-row">
+        <div class="brand-row">
+          <a href="/" class="brand">
+            <img
+              src="/static/img/logo.svg"
+              alt="Belpw Health logo"
+              class="logo"
+            />
+          </a>
+          <button
+            id="navToggle"
+            class="nav-toggle"
+            aria-label="Toggle navigation"
+          >
+            ☰
+          </button>
+        </div>
+        <nav class="nav-links">
+          {% if session.user %} {% if session.user.role == 'patient' %}
+          <a href="{{ url_for('patient_dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('book') }}">Book Appointment</a>
+          {% elif session.user.role == 'admin' %}
+          <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+          {% endif %}
+          <a href="{{ url_for('logout') }}" class="danger">Logout</a>
+          {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('register') }}">Register</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+
+    <main class="container page-content fade-in-up">
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <ul class="flash-list">
+        {% for m in messages %}
+        <li class="flash">{{ m }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %} {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <small>{{ transport_disclaimer }}</small>
+      </div>
+    </footer>
+    <script src="/static/js/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Book an Appointment</h2>
+<div class="card">
+  <form id="bookForm" method="post" class="form">
+    <label
+      >Choose doctor / clinic
+      <select name="doctor" required>
+        {% for p in providers %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label
+      >Date
+      <input type="date" name="date" required />
+    </label>
+    <label
+      >Time
+      <input type="time" name="time" required />
+    </label>
+    <fieldset>
+      <legend>Transport</legend>
+      <label
+        ><input type="radio" name="needs_transport" value="yes" /> Yes, I need
+        transport</label
+      >
+      <label
+        ><input type="radio" name="needs_transport" value="no" checked /> No, I
+        have my own transport</label
+      >
+    </fieldset>
+    <div id="pickupGroup" style="display: none" class="card" aria-hidden="true">
+      <label
+        >Pickup address
+        <input type="text" name="pickup_address" id="pickup_address" />
+      </label>
+      <p id="etaText" class="note"></p>
+    </div>
+    <div class="form-actions">
+      <button class="btn" type="submit" data-wait="Submitting...">
+        Submit Request
+      </button>
+    </div>
+  </form>
+</div>
+<script>
+  // Simple client-side logic for showing pickup fields and ETA
+  (function () {
+    const form = document.getElementById("bookForm");
+    const radios = form.elements["needs_transport"];
+    const pickup = document.getElementById("pickupGroup");
+    const eta = document.getElementById("etaText");
+    function update() {
+      const selected = Array.from(radios).find((r) => r.checked).value;
+      if (selected === "yes") {
+        pickup.style.display = "block";
+        // Simulate estimated pickup time
+        const minutes = 10 + Math.floor(Math.random() * 30);
+        eta.textContent = "Estimated pickup time: ~" + minutes + " minutes.";
+      } else {
+        pickup.style.display = "none";
+        eta.textContent = "";
+      }
+    }
+    Array.from(radios).forEach((r) => r.addEventListener("change", update));
+    update();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %} {% block content %}
+<h2>Your Appointments</h2>
+{% if appointments %}
+  <div class="card">
+    <table class="table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Doctor</th>
+      <th>Date / Time</th>
+      <th>Status</th>
+      <th>Transport</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for a in appointments %}
+      </table>
+    </div>
+    <tr>
+      <td>{{ a.id }}</td>
+      <td>{{ a.doctor }}</td>
+      <td>{{ a.datetime }}</td>
+      <td>{{ a.status }}</td>
+      <td>
+        {% if a.transport.requested %}
+        <div>Pickup: {{ a.transport.pickup_address }}</div>
+        <div>Status: {{ a.transport.status }}</div>
+        {% else %}
+        <div>Self-transport</div>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No appointments yet. <a href="{{ url_for('book') }}">Book one now</a>.</p>
+{% endif %} {% endblock %}
